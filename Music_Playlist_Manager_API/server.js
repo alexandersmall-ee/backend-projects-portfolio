@@ -6,6 +6,8 @@ const bodyParser = require('body-parser');
 const sqlite3 = require('sqlite3').verbose();
 const cors = require('cors');
 const dotenv = require('dotenv');
+const fs = require('fs');
+const path = require('path');
 
 // Initialize environment variables
 dotenv.config();
@@ -17,9 +19,22 @@ const PORT = process.env.PORT || 3000;
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Initialize SQLite database
-const db = new sqlite3.Database('./db/database.sqlite', (err) => {
+const dbPath = path.resolve(__dirname, 'db', 'database.sqlite');
+
+// Ensure the database file exists
+if (!fs.existsSync(path.dirname(dbPath))) {
+    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+}
+
+if (!fs.existsSync(dbPath)) {
+    fs.writeFileSync(dbPath, '');
+    console.log('Database file created successfully.');
+}
+
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Error opening database:', err.message);
     } else {
